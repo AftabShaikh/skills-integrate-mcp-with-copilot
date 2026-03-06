@@ -1,65 +1,50 @@
 document.addEventListener("DOMContentLoaded", () => {
   const activitiesList = document.getElementById("activities-list");
-  const activitySelect = document.getElementById("activity");
+  const searchInput = document.getElementById("search-input");
+  const categoryFilter = document.getElementById("category-filter");
+  const sortSelect = document.getElementById("sort-select");
   const signupForm = document.getElementById("signup-form");
   const messageDiv = document.getElementById("message");
+  const modalOverlay = document.getElementById("modal-overlay");
+  const modalClose = document.getElementById("modal-close");
+  const modalActivityName = document.getElementById("modal-activity-name");
 
-  // Function to fetch activities from API
+  let allActivities = {};
+  let currentActivityName = "";
+
+  // Show a toast message
+  function showMessage(text, type) {
+    messageDiv.textContent = text;
+    messageDiv.className = type;
+    messageDiv.classList.remove("hidden");
+    setTimeout(() => messageDiv.classList.add("hidden"), 5000);
+  }
+
+  // Open registration modal
+  function openModal(activityName) {
+    currentActivityName = activityName;
+    modalActivityName.textContent = activityName;
+    document.getElementById("email").value = "";
+    modalOverlay.classList.remove("hidden");
+  }
+
+  // Close registration modal
+  function closeModal() {
+    modalOverlay.classList.add("hidden");
+  }
+
+  modalClose.addEventListener("click", closeModal);
+  modalOverlay.addEventListener("click", (e) => {
+    if (e.target === modalOverlay) closeModal();
+  });
+
+  // Fetch activities from API
   async function fetchActivities() {
     try {
       const response = await fetch("/activities");
-      const activities = await response.json();
-
-      // Clear loading message
-      activitiesList.innerHTML = "";
-
-      // Populate activities list
-      Object.entries(activities).forEach(([name, details]) => {
-        const activityCard = document.createElement("div");
-        activityCard.className = "activity-card";
-
-        const spotsLeft =
-          details.max_participants - details.participants.length;
-
-        // Create participants HTML with delete icons instead of bullet points
-        const participantsHTML =
-          details.participants.length > 0
-            ? `<div class="participants-section">
-              <h5>Participants:</h5>
-              <ul class="participants-list">
-                ${details.participants
-                  .map(
-                    (email) =>
-                      `<li><span class="participant-email">${email}</span><button class="delete-btn" data-activity="${name}" data-email="${email}">❌</button></li>`
-                  )
-                  .join("")}
-              </ul>
-            </div>`
-            : `<p><em>No participants yet</em></p>`;
-
-        activityCard.innerHTML = `
-          <h4>${name}</h4>
-          <p>${details.description}</p>
-          <p><strong>Schedule:</strong> ${details.schedule}</p>
-          <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
-          <div class="participants-container">
-            ${participantsHTML}
-          </div>
-        `;
-
-        activitiesList.appendChild(activityCard);
-
-        // Add option to select dropdown
-        const option = document.createElement("option");
-        option.value = name;
-        option.textContent = name;
-        activitySelect.appendChild(option);
-      });
-
-      // Add event listeners to delete buttons
-      document.querySelectorAll(".delete-btn").forEach((button) => {
-        button.addEventListener("click", handleUnregister);
-      });
+      allActivities = await response.json();
+      populateCategories();
+      renderActivities();
     } catch (error) {
       activitiesList.innerHTML =
         "<p>Failed to load activities. Please try again later.</p>";
@@ -67,94 +52,177 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Handle unregister functionality
+  // Populate category filter from data
+  function populateCategories() {
+    const cats = new Set();
+    Object.values(allActivities).forEach((d) => {
+      if (d.category) cats.add(d.category);
+    });
+    // Keep the "All Categories" option, remove old dynamic ones
+    categoryFilter.querySelectorAll("option:not(:first-child)").forEach((o) => o.remove());
+    [...cats].sort().forEach((cat) => {
+      const opt = document.createElement("option");
+      opt.value = cat;
+      opt.textContent = cat;
+      categoryFilter.appendChild(opt);
+    });
+  }
+
+  // Filter, sort, and render activity cards
+  function renderActivities() {
+    const query = searchInput.value.toLowerCase();
+    const selectedCat = categoryFilter.value;
+    const sortVal = sortSelect.value;
+
+    let entries = Object.entries(allActivities);
+
+    // Filter by search
+    if (query) {
+      entries = entries.filter(
+        ([name, d]) =>
+          name.toLowerCase().includes(query) ||
+          d.description.toLowerCase().includes(query)
+      );
+    }
+
+    // Filter by category
+    if (selectedCat) {
+      entries = entries.filter(([, d]) => d.category === selectedCat);
+    }
+
+    // Sort
+    entries.sort((a, b) => {
+      const [nameA, detA] = a;
+      const [nameB, detB] = b;
+      switch (sortVal) {
+        case "name-desc":
+          return nameB.localeCompare(nameA);
+        case "spots-asc":
+          return (
+            detA.max_participants -
+            detA.participants.length -
+            (detB.max_participants - detB.participants.length)
+          );
+        case "spots-desc":
+          return (
+            detB.max_participants -
+            detB.participants.length -
+            (detA.max_participants - detA.participants.length)
+          );
+        default:
+          return nameA.localeCompare(nameB);
+      }
+    });
+
+    activitiesList.innerHTML = "";
+
+    if (entries.length === 0) {
+      activitiesList.innerHTML = "<p class='no-results'>No activities match your criteria.</p>";
+      return;
+    }
+
+    entries.forEach(([name, details]) => {
+      const spotsLeft = details.max_participants - details.participants.length;
+
+      const card = document.createElement("div");
+      card.className = "activity-card";
+
+      const participantsHTML =
+        details.participants.length > 0
+          ? `<div class="participants-section">
+              <h5>Participants:</h5>
+              <ul class="participants-list">
+                ${details.participants
+                  .map(
+                    (email) =>
+                      `<li><span class="participant-email">${email}</span><button class="delete-btn" data-activity="${name}" data-email="${email}" title="Unregister">&#10060;</button></li>`
+                  )
+                  .join("")}
+              </ul>
+            </div>`
+          : `<p class="no-participants"><em>No participants yet</em></p>`;
+
+      card.innerHTML = `
+        <div class="card-header">
+          <h4>${name}</h4>
+          <span class="category-badge">${details.category || ""}</span>
+        </div>
+        <p class="card-description">${details.description}</p>
+        <p><strong>Schedule:</strong> ${details.schedule}</p>
+        <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
+        <div class="participants-container">${participantsHTML}</div>
+        <button class="register-btn" data-activity="${name}" ${spotsLeft === 0 ? "disabled" : ""}>
+          ${spotsLeft === 0 ? "Full" : "Register Student"}
+        </button>
+      `;
+
+      activitiesList.appendChild(card);
+    });
+
+    // Bind register buttons
+    document.querySelectorAll(".register-btn").forEach((btn) => {
+      btn.addEventListener("click", () => openModal(btn.dataset.activity));
+    });
+
+    // Bind unregister buttons
+    document.querySelectorAll(".delete-btn").forEach((btn) => {
+      btn.addEventListener("click", handleUnregister);
+    });
+  }
+
+  // Handle unregister
   async function handleUnregister(event) {
-    const button = event.target;
+    const button = event.target.closest(".delete-btn");
     const activity = button.getAttribute("data-activity");
     const email = button.getAttribute("data-email");
 
     try {
       const response = await fetch(
-        `/activities/${encodeURIComponent(
-          activity
-        )}/unregister?email=${encodeURIComponent(email)}`,
-        {
-          method: "DELETE",
-        }
+        `/activities/${encodeURIComponent(activity)}/unregister?email=${encodeURIComponent(email)}`,
+        { method: "DELETE" }
       );
-
       const result = await response.json();
-
       if (response.ok) {
-        messageDiv.textContent = result.message;
-        messageDiv.className = "success";
-
-        // Refresh activities list to show updated participants
+        showMessage(result.message, "success");
         fetchActivities();
       } else {
-        messageDiv.textContent = result.detail || "An error occurred";
-        messageDiv.className = "error";
+        showMessage(result.detail || "An error occurred", "error");
       }
-
-      messageDiv.classList.remove("hidden");
-
-      // Hide message after 5 seconds
-      setTimeout(() => {
-        messageDiv.classList.add("hidden");
-      }, 5000);
     } catch (error) {
-      messageDiv.textContent = "Failed to unregister. Please try again.";
-      messageDiv.className = "error";
-      messageDiv.classList.remove("hidden");
+      showMessage("Failed to unregister. Please try again.", "error");
       console.error("Error unregistering:", error);
     }
   }
 
-  // Handle form submission
+  // Handle signup form
   signupForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-
     const email = document.getElementById("email").value;
-    const activity = document.getElementById("activity").value;
 
     try {
       const response = await fetch(
-        `/activities/${encodeURIComponent(
-          activity
-        )}/signup?email=${encodeURIComponent(email)}`,
-        {
-          method: "POST",
-        }
+        `/activities/${encodeURIComponent(currentActivityName)}/signup?email=${encodeURIComponent(email)}`,
+        { method: "POST" }
       );
-
       const result = await response.json();
-
       if (response.ok) {
-        messageDiv.textContent = result.message;
-        messageDiv.className = "success";
-        signupForm.reset();
-
-        // Refresh activities list to show updated participants
+        showMessage(result.message, "success");
+        closeModal();
         fetchActivities();
       } else {
-        messageDiv.textContent = result.detail || "An error occurred";
-        messageDiv.className = "error";
+        showMessage(result.detail || "An error occurred", "error");
       }
-
-      messageDiv.classList.remove("hidden");
-
-      // Hide message after 5 seconds
-      setTimeout(() => {
-        messageDiv.classList.add("hidden");
-      }, 5000);
     } catch (error) {
-      messageDiv.textContent = "Failed to sign up. Please try again.";
-      messageDiv.className = "error";
-      messageDiv.classList.remove("hidden");
+      showMessage("Failed to sign up. Please try again.", "error");
       console.error("Error signing up:", error);
     }
   });
 
-  // Initialize app
+  // Live filtering & sorting
+  searchInput.addEventListener("input", renderActivities);
+  categoryFilter.addEventListener("change", renderActivities);
+  sortSelect.addEventListener("change", renderActivities);
+
+  // Init
   fetchActivities();
 });

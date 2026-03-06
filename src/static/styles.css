@@ -2,172 +2,260 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: Arial, sans-serif;
+  font-family: "Segoe UI", Arial, sans-serif;
 }
 
 body {
-  font-family: Arial, sans-serif;
   line-height: 1.6;
   color: #333;
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 16px;
   background-color: #f5f5f5;
 }
 
+/* ── Header ── */
 header {
   text-align: center;
-  padding: 20px 0;
-  margin-bottom: 30px;
-  background-color: #1a237e;
+  padding: 24px 16px;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, #1a237e, #3949ab);
   color: white;
-  border-radius: 5px;
+  border-radius: 8px;
 }
 
-header h1 {
-  margin-bottom: 10px;
-}
+header h1 { margin-bottom: 4px; font-size: 1.6rem; }
+header h2 { font-weight: 400; font-size: 1rem; opacity: 0.9; }
 
-main {
+/* ── Toolbar ── */
+#toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 30px;
-  justify-content: center;
-}
-
-@media (min-width: 768px) {
-  main {
-    grid-template-columns: 2fr 1fr;
-  }
-}
-
-section {
-  background-color: white;
-  padding: 20px;
-  border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 500px;
-}
-
-section h3 {
+  gap: 10px;
   margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #ddd;
-  color: #1a237e;
+}
+
+#toolbar input,
+#toolbar select {
+  flex: 1 1 180px;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  background: #fff;
+}
+
+#toolbar input:focus,
+#toolbar select:focus {
+  outline: none;
+  border-color: #3949ab;
+  box-shadow: 0 0 0 2px rgba(57, 73, 171, 0.2);
+}
+
+/* ── Activity cards grid ── */
+#activities-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.no-results {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px;
+  color: #888;
 }
 
 .activity-card {
-  margin-bottom: 15px;
-  padding: 15px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  background-color: #f9f9f9;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s;
 }
 
-.activity-card h4 {
-  margin-bottom: 10px;
-  color: #0066cc;
+.activity-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.activity-card p {
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 8px;
 }
 
-/* New styles for participants section */
+.card-header h4 {
+  color: #1a237e;
+  font-size: 1.1rem;
+}
+
+.category-badge {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: #e8eaf6;
+  color: #3949ab;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-description {
+  color: #555;
+  margin-bottom: 6px;
+}
+
+.activity-card p { margin-bottom: 4px; font-size: 0.9rem; }
+
+/* Participants */
 .participants-container {
-  margin-top: 15px;
-  padding-top: 12px;
-  border-top: 1px dashed #ccc;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px dashed #ddd;
 }
 
 .participants-section h5 {
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   color: #1a237e;
-  font-size: 16px;
+  font-size: 0.85rem;
 }
 
-.participants-section ul {
-  list-style-type: none;
-  padding-left: 5px;
+.participants-list {
+  list-style: none;
+  padding: 0;
 }
 
-.participants-section ul li {
-  padding: 4px 0;
-  position: relative;
+.participants-list li {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 3px 0;
+  font-size: 0.85rem;
 }
 
-/* Remove the bullet point pseudo-element */
-.participants-section ul li::before {
-  display: none;
-}
-
-.participant-email {
-  flex-grow: 1;
-  margin-right: 8px;
-}
+.participant-email { flex: 1; }
 
 .delete-btn {
   background: none;
   border: none;
-  color: #c62828;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   padding: 2px 5px;
-  transition: all 0.2s;
   border-radius: 3px;
+  transition: background 0.2s;
 }
 
-.delete-btn:hover {
-  background-color: #ffebee;
+.delete-btn:hover { background: #ffebee; }
+
+.no-participants { color: #999; font-size: 0.85rem; }
+
+/* Register button on card */
+.register-btn {
+  margin-top: 12px;
+  width: 100%;
+  padding: 8px;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #3949ab;
+  color: #fff;
+  transition: background 0.2s;
 }
 
-.participants-section p {
-  color: #777;
-  font-style: italic;
+.register-btn:hover:not(:disabled) { background: #1a237e; }
+.register-btn:disabled {
+  background: #bbb;
+  cursor: default;
+}
+
+/* ── Modal ── */
+#modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+#modal {
+  background: #fff;
+  border-radius: 10px;
+  padding: 24px;
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+#modal h3 { margin-bottom: 16px; color: #1a237e; }
+
+#modal-close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  color: #666;
 }
 
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 14px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
+  margin-bottom: 4px;
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 
-.form-group input,
-.form-group select {
+.form-group input {
   width: 100%;
   padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
 }
 
-button {
-  background-color: #1a237e;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  font-size: 16px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.2s;
+.form-group input:focus {
+  outline: none;
+  border-color: #3949ab;
+  box-shadow: 0 0 0 2px rgba(57, 73, 171, 0.2);
 }
 
-button:hover {
-  background-color: #3949ab;
-}
-
-.message {
-  margin-top: 20px;
+#signup-form button {
+  width: 100%;
   padding: 10px;
-  border-radius: 4px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #3949ab;
+  color: #fff;
+  transition: background 0.2s;
+}
+
+#signup-form button:hover { background: #1a237e; }
+
+/* ── Toast message ── */
+#message {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  z-index: 200;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .success {
@@ -182,19 +270,22 @@ button:hover {
   border: 1px solid #ef9a9a;
 }
 
-.info {
-  background-color: #d1ecf1;
-  color: #0c5460;
-  border: 1px solid #bee5eb;
-}
+.hidden { display: none; }
 
-.hidden {
-  display: none;
-}
-
+/* ── Footer ── */
 footer {
   text-align: center;
-  margin-top: 30px;
-  padding: 20px;
-  color: #666;
+  margin-top: 32px;
+  padding: 16px;
+  color: #888;
+  font-size: 0.85rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  body { padding: 10px; }
+  header h1 { font-size: 1.3rem; }
+  #activities-list { grid-template-columns: 1fr; }
+  #toolbar { flex-direction: column; }
+  #toolbar input, #toolbar select { flex: 1 1 100%; }
 }
